@@ -12,6 +12,7 @@ using PerformanceCalculator.Leaderboard;
 using PerformanceCalculator.Performance;
 using PerformanceCalculator.Profile;
 using PerformanceCalculator.Simulate;
+using PerformanceCalculator.Gui;
 
 namespace PerformanceCalculator
 {
@@ -21,6 +22,7 @@ namespace PerformanceCalculator
     [Subcommand(typeof(ProfileCommand))]
     [Subcommand(typeof(SimulateListingCommand))]
     [Subcommand(typeof(LeaderboardCommand))]
+    [Subcommand(typeof(GuiCommand))]
     [HelpOption("-?|-h|--help")]
     public class Program
     {
