@@ -132,7 +132,7 @@ namespace PerformanceCalculator.Difficulty
             return new Result
             {
                 RulesetId = ruleset.RulesetInfo.OnlineID,
-                BeatmapId = beatmap.BeatmapInfo.OnlineID ?? 0,
+                BeatmapId = beatmap.BeatmapInfo.OnlineID,
                 Beatmap = beatmap.BeatmapInfo.ToString(),
                 Mods = mods.Select(m => new APIMod(m)).ToList(),
                 Attributes = attributes
