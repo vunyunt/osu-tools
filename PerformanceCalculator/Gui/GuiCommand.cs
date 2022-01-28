@@ -9,7 +9,7 @@ namespace PerformanceCalculator.Gui
     {
         public override void Execute()
         {
-            GameHost host = Host.GetSuitableHost(@"PerformanceCalculator");
+            GameHost host = Host.GetSuitableDesktopHost(@"PerformanceCalculator");
             Game game = new PerformanceCalculatorGame();
             host.Run(game);
         }
