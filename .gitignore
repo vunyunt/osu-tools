@@ -269,3 +269,6 @@ Staging/
 
 inspectcodereport.xml
 PerformanceCalculator/cache/
+
+# Beatmap cache
+cache/

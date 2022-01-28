@@ -125,7 +125,7 @@ namespace PerformanceCalculator.Difficulty
         private Result processBeatmap(WorkingBeatmap beatmap)
         {
             // Get the ruleset
-            var ruleset = LegacyHelper.GetRulesetFromLegacyID(Ruleset ?? beatmap.BeatmapInfo.RulesetID);
+            var ruleset = Ruleset.HasValue? LegacyHelper.GetRulesetFromLegacyID(Ruleset.Value) : beatmap.BeatmapInfo.Ruleset.CreateInstance();
             var mods = LegacyHelper.TrimNonDifficultyAdjustmentMods(ruleset, getMods(ruleset).ToArray());
             var attributes = ruleset.CreateDifficultyCalculator(beatmap).Calculate(mods);
 
