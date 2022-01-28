@@ -157,7 +157,8 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 {
                     loadFromTresButton.Enabled.Value = true;
                 });
-                throw e;
+
+                // TODO: Show error message
             }
         }
 
