@@ -16,6 +16,20 @@
             "console": "internalConsole"
         },
         {
+            "name": "Debug (Performance Calculator GUI)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "dotnet",
+            "args": [
+                "${workspaceRoot}/PerformanceCalculator/bin/Debug/net5.0/PerformanceCalculator.dll",
+                "gui"
+            ],
+            "cwd": "${workspaceRoot}",
+            "preLaunchTask": "Build (Debug)",
+            "env": {},
+            "console": "internalConsole"
+        },
+        {
             "name": "Release (Performance Calculator)",
             "type": "coreclr",
             "request": "launch",

@@ -14,6 +14,7 @@ using osuTK;
 using osu.Game.Rulesets.Taiko;
 using osu.Game.Rulesets.Taiko.Difficulty;
 
+using PerformanceCalculator.Gui;
 using PerformanceCalculator.Gui.Api.Tres;
 
 namespace PerformanceCalculator.Gui.Difficulty.Taiko
@@ -37,7 +38,7 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
 
     public class TaikoDifficultyCalculatorScreen : Screen
     {
-        private TaikoDiffficultyCalculationParameters parameters = TaikoDiffficultyCalculationParameters.Default;
+        private TaikoDiffficultyCalculationParameters parameters;
         private BindableDouble repetitionPenaltyDecayMultiplier;
         private BindableDouble skillMultiplier;
         private BindableDouble strainDecayBase;
@@ -286,72 +287,29 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
 
         private Drawable CreateParameterInputs()
         {
-            return new FillFlowContainer
+            return new BasicScrollContainer(scrollDirection: Direction.Vertical)
             {
-                AutoSizeAxes = Axes.Both,
-                Direction = FillDirection.Vertical,
-                Padding = new MarginPadding(25),
-                Spacing = new Vector2(0, 5),
-                Children = new Drawable[] {
-                    new BasicButton {
-                        Text = "Compute Difficulty",
-                        Size = new Vector2(200, 30),
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Action = () =>
-                        {
-                            Task.Run(RecomputeDifficulty);
-                        }
-                    },
-                    new SpriteText {
-                        Text = "Colour Difficulty",
-                        Font = FrameworkFont.Regular.With(weight: "Bold"),
-                        Padding = new MarginPadding{
-                            Top = 10,
-                            Bottom = 10
-                        }
-                    },
-                    new SpriteText {
-                        Text = "Repetition Penalty Decay Multiplier",
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Font = FrameworkFont.Regular,
-                        Colour = Color4.White,
-                    },
-                    new BasicSliderBar<double> {
-                        Current = this.repetitionPenaltyDecayMultiplier,
-                        Height = 25,
-                        Width = 250,
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                    },
-                    new SpriteText {
-                        Text = "Skill Multiplier",
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Font = FrameworkFont.Regular,
-                        Colour = Color4.White,
-                    },
-                    new BasicSliderBar<double> {
-                        Current = this.skillMultiplier,
-                        Height = 25,
-                        Width = 250,
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                    },
-                    new SpriteText {
-                        Text = "Strain Decay Base",
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Font = FrameworkFont.Regular,
-                        Colour = Color4.White,
-                    },
-                    new BasicSliderBar<double> {
-                        Current = this.strainDecayBase,
-                        Height = 25,
-                        Width = 250,
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
+                Name = "ParameterInputScrollable",
+                RelativeSizeAxes = Axes.Both,
+                Child = new FillFlowContainer
+                {
+                    Direction = FillDirection.Vertical,
+                    AutoSizeAxes = Axes.Y,
+                    RelativeSizeAxes = Axes.X,
+                    Padding = new MarginPadding(25),
+                    Children = new Drawable[]
+                    {
+                        new BasicButton {
+                            Text = "Compute Difficulty",
+                            Size = new Vector2(200, 30),
+                            Anchor = Anchor.TopLeft,
+                            Origin = Anchor.TopLeft,
+                            Action = () =>
+                            {
+                                Task.Run(RecomputeDifficulty);
+                            }
+                        },
+                        this.parameters.ColourParameters.CreateControlSection(label: "Colour"),
                     }
                 }
             };
@@ -387,8 +345,9 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
         [BackgroundDependencyLoader]
         private void load()
         {
-            this.InitializeBindableParameters();
+            this.parameters = new TaikoDiffficultyCalculationParameters();
 
+            // this.InitializeBindableParameters();
             InternalChildren = new Drawable[]
             {
                 new Box
