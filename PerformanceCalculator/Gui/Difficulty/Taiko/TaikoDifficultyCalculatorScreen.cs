@@ -42,6 +42,7 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
         private BindableDouble repetitionPenaltyDecayMultiplier;
         private BindableDouble skillMultiplier;
         private BindableDouble strainDecayBase;
+        private Bindable<string> beatmapIdInputValue = new Bindable<string>(string.Empty);
         private BindableList<TaikoBeatmapViewObject> beatmaps = new BindableList<TaikoBeatmapViewObject>();
         private FillFlowContainer beatmapsContainer;
         private Button loadFromTresButton;
@@ -118,6 +119,15 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
             });
         }
 
+        private void LoadBeatmapId(string beatmapId)
+        {
+            ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(beatmapId);
+            this.Schedule(() =>
+            {
+                beatmaps.Add(new TaikoBeatmapViewObject(beatmap));
+            });
+        }
+
         private async void LoadBeatmapsFromTres()
         {
             this.Schedule(() =>
@@ -125,19 +135,30 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 loadFromTresButton.Enabled.Value = false;
             });
 
-            string[] beatmapIds = await this.tresApi.getBeatmapIds(limit: 10);
-            foreach (string beatmapId in beatmapIds)
+            try
             {
-                ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(beatmapId);
+                string[] beatmapIds = await this.tresApi.getBeatmapIds(limit: 10);
+                foreach (string beatmapId in beatmapIds)
+                {
+                    ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(beatmapId);
+                    this.Schedule(() =>
+                    {
+                        beatmaps.Add(new TaikoBeatmapViewObject(beatmap));
+                    });
+                }
                 this.Schedule(() =>
                 {
-                    beatmaps.Add(new TaikoBeatmapViewObject(beatmap));
+                    loadFromTresButton.Enabled.Value = true;
                 });
             }
-            this.Schedule(() =>
+            catch (System.Exception e)
             {
-                loadFromTresButton.Enabled.Value = true;
-            });
+                this.Schedule(() =>
+                {
+                    loadFromTresButton.Enabled.Value = true;
+                });
+                throw e;
+            }
         }
 
         private Drawable RenderBeatmap(TaikoBeatmapViewObject beatmap)
@@ -235,7 +256,38 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 Task.Run(LoadBeatmapsFromTres);
             };
 
-            return loadFromTresButton;
+            return new BasicScrollContainer(scrollDirection: Direction.Horizontal)
+            {
+                RelativeSizeAxes = Axes.X,
+                Height = 30,
+                Children = new Drawable[]
+                {
+                    new FillFlowContainer
+                    {
+                        Name = "BeatmapIdInputContainer",
+                        AutoSizeAxes = Axes.Both,
+                        Direction = FillDirection.Horizontal,
+                        Children = new Drawable[]
+                        {
+                            new BasicTextBox {
+                                PlaceholderText = "Beatmap ID",
+                                Width = 200,
+                                Height = 30,
+                                Current = this.beatmapIdInputValue
+                            },
+                            new BasicButton {
+                                Text = "Load",
+                                Size = new Vector2(100, 30),
+                                Action = () =>
+                                {
+                                    LoadBeatmapId(this.beatmapIdInputValue.Value);
+                                }
+                            },
+                            this.loadFromTresButton
+                        }
+                    }
+                }
+            };
         }
 
         /// <Summary>
@@ -256,6 +308,7 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
             return new GridContainer
             {
                 RelativeSizeAxes = Axes.Both,
+                Margin = new MarginPadding(25),
                 ColumnDimensions = new[]
                 {
                     new Dimension(GridSizeMode.Distributed),
