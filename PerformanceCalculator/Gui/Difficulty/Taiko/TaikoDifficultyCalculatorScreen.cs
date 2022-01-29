@@ -83,12 +83,19 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
         private void LoadBeatmapId(string beatmapId)
         {
             this.Schedule(() => this.canLoadNewBeatmap.Value = false);
-
-            ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(beatmapId);
-            this.Schedule(() =>
+            try
             {
-                beatmaps.Add(new TaikoBeatmapViewObject(beatmap));
-            });
+                ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(beatmapId);
+                this.Schedule(() =>
+                {
+                    beatmaps.Add(new TaikoBeatmapViewObject(beatmap));
+                });
+            }
+            catch (System.Exception e)
+            {
+                this.Schedule(() => this.canLoadNewBeatmap.Value = true);
+            }
+
 
             this.Schedule(() => this.canLoadNewBeatmap.Value = true);
         }
@@ -249,7 +256,7 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                         Children = new Drawable[]
                         {
                             new BasicTextBox {
-                                PlaceholderText = "Beatmap ID",
+                                PlaceholderText = "Beatmap ID/Path",
                                 Width = 200,
                                 Height = 30,
                                 Current = this.beatmapIdInputValue
