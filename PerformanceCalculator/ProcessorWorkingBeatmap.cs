@@ -38,7 +38,7 @@ namespace PerformanceCalculator
             beatmap.BeatmapInfo.Ruleset = LegacyHelper.GetRulesetFromLegacyID(beatmap.BeatmapInfo.Ruleset.OnlineID).RulesetInfo;
 
             if (beatmapId.HasValue)
-                beatmap.BeatmapInfo.OnlineID = beatmapId ?? 0;
+                beatmap.BeatmapInfo.OnlineID = beatmapId.Value;
         }
 
         private static Beatmap readFromFile(string filename)
