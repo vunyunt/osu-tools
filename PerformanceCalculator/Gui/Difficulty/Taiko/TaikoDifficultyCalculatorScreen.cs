@@ -14,7 +14,6 @@ using osuTK;
 using osu.Game.Rulesets.Taiko;
 using osu.Game.Rulesets.Taiko.Difficulty;
 
-using PerformanceCalculator.Gui;
 using PerformanceCalculator.Gui.Api.Tres;
 
 namespace PerformanceCalculator.Gui.Difficulty.Taiko
@@ -39,9 +38,6 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
     public class TaikoDifficultyCalculatorScreen : Screen
     {
         private TaikoDiffficultyCalculationParameters parameters;
-        private BindableDouble repetitionPenaltyDecayMultiplier;
-        private BindableDouble skillMultiplier;
-        private BindableDouble strainDecayBase;
         private Bindable<string> beatmapIdInputValue = new Bindable<string>(string.Empty);
         private BindableList<TaikoBeatmapViewObject> beatmaps = new BindableList<TaikoBeatmapViewObject>();
         private FillFlowContainer beatmapsContainer;
@@ -56,43 +52,6 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
         public TaikoDifficultyCalculatorScreen(string tresApiUrl)
         {
             tresApi = new TresApi(tresApiUrl);
-        }
-
-        private void InitializeBindableParameters()
-        {
-            repetitionPenaltyDecayMultiplier = new BindableDouble(
-                this.parameters.ColourParameters.RepetitionPenaltyDecayMultiplier)
-            {
-                MinValue = 0,
-                MaxValue = 0.1,
-                Precision = 0.001
-            };
-            repetitionPenaltyDecayMultiplier.ValueChanged += (e) =>
-            {
-                this.parameters.ColourParameters.RepetitionPenaltyDecayMultiplier = e.NewValue;
-            };
-            skillMultiplier = new BindableDouble(
-                this.parameters.ColourParameters.SkillMultiplier)
-            {
-                MinValue = 0,
-                MaxValue = 2,
-                Precision = 0.01
-            };
-            skillMultiplier.ValueChanged += (e) =>
-            {
-                this.parameters.ColourParameters.SkillMultiplier = e.NewValue;
-            };
-            strainDecayBase = new BindableDouble(
-                this.parameters.ColourParameters.StrainDecayBase)
-            {
-                MinValue = 0,
-                MaxValue = 1,
-                Precision = 0.01
-            };
-            strainDecayBase.ValueChanged += (e) =>
-            {
-                this.parameters.ColourParameters.StrainDecayBase = e.NewValue;
-            };
         }
 
         private void RecomputeDifficulty()
@@ -170,48 +129,48 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 AutoSizeAxes = Axes.Both,
                 Children = new Drawable[]
                 {
-                        new SpriteText
-                        {
-                            Text = beatmap.Beatmap.Metadata.Artist + " - " + beatmap.Beatmap.Metadata.Title,
-                            Anchor = Anchor.TopLeft,
-                            Origin = Anchor.TopLeft,
-                            Colour = Color4.White
-                        },
-                        new SpriteText
-                        {
-                            Text = "[" + beatmap.Beatmap.BeatmapInfo.DifficultyName + "]",
-                            Anchor = Anchor.TopLeft,
-                            Origin = Anchor.TopLeft,
-                            Colour = Color4.White
-                        },
-                        new SpriteText
-                        {
-                            Text = "Calculated Star Rating: " + beatmap.CalculatedDifficulty.StarRating.ToString(),
-                            Anchor = Anchor.TopLeft,
-                            Origin = Anchor.TopLeft,
-                            Colour = Color4.White
-                        },
-                        new SpriteText
-                        {
-                            Text = "Calculated Colour Difficulty: " + beatmap.CalculatedDifficulty.ColourDifficulty.ToString(),
-                            Anchor = Anchor.TopLeft,
-                            Origin = Anchor.TopLeft,
-                            Colour = Color4.White
-                        },
-                        new SpriteText
-                        {
-                            Text = "Calculated Stamina Difficulty: " + beatmap.CalculatedDifficulty.StaminaDifficulty.ToString(),
-                            Anchor = Anchor.TopLeft,
-                            Origin = Anchor.TopLeft,
-                            Colour = Color4.White
-                        },
-                        new SpriteText
-                        {
-                            Text = "Calculated Rhythm Difficulty: " + beatmap.CalculatedDifficulty.RhythmDifficulty.ToString(),
-                            Anchor = Anchor.TopLeft,
-                            Origin = Anchor.TopLeft,
-                            Colour = Color4.White
-                        }
+                    new SpriteText
+                    {
+                        Text = beatmap.Beatmap.Metadata.Artist + " - " + beatmap.Beatmap.Metadata.Title,
+                        Anchor = Anchor.TopLeft,
+                        Origin = Anchor.TopLeft,
+                        Colour = Color4.White
+                    },
+                    new SpriteText
+                    {
+                        Text = "[" + beatmap.Beatmap.BeatmapInfo.DifficultyName + "]",
+                        Anchor = Anchor.TopLeft,
+                        Origin = Anchor.TopLeft,
+                        Colour = Color4.White
+                    },
+                    new SpriteText
+                    {
+                        Text = "Calculated Star Rating: " + beatmap.CalculatedDifficulty.StarRating.ToString(),
+                        Anchor = Anchor.TopLeft,
+                        Origin = Anchor.TopLeft,
+                        Colour = Color4.White
+                    },
+                    new SpriteText
+                    {
+                        Text = "Calculated Colour Difficulty: " + beatmap.CalculatedDifficulty.ColourDifficulty.ToString(),
+                        Anchor = Anchor.TopLeft,
+                        Origin = Anchor.TopLeft,
+                        Colour = Color4.White
+                    },
+                    new SpriteText
+                    {
+                        Text = "Calculated Stamina Difficulty: " + beatmap.CalculatedDifficulty.StaminaDifficulty.ToString(),
+                        Anchor = Anchor.TopLeft,
+                        Origin = Anchor.TopLeft,
+                        Colour = Color4.White
+                    },
+                    new SpriteText
+                    {
+                        Text = "Calculated Rhythm Difficulty: " + beatmap.CalculatedDifficulty.RhythmDifficulty.ToString(),
+                        Anchor = Anchor.TopLeft,
+                        Origin = Anchor.TopLeft,
+                        Colour = Color4.White
+                    }
                 }
             };
         }
@@ -261,6 +220,7 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
             {
                 RelativeSizeAxes = Axes.X,
                 Height = 30,
+                ScrollbarVisible = false,
                 Children = new Drawable[]
                 {
                     new FillFlowContainer
@@ -325,13 +285,16 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                         this.CreateBeatmapIdInput(),
                     },
                     new Drawable[] {
-                        // this.beatmapsContainer
-                        new BasicScrollContainer(scrollDirection: Direction.Vertical)
-                        {
+                        new Container {
                             RelativeSizeAxes = Axes.Both,
-                            Children = new[]
+                            Padding = new MarginPadding {Top = 25, Bottom = 25},
+                            Child = new BasicScrollContainer(scrollDirection: Direction.Vertical)
                             {
-                                this.beatmapsContainer
+                                RelativeSizeAxes = Axes.Both,
+                                Children = new[]
+                                {
+                                    this.beatmapsContainer
+                                }
                             }
                         }
                     }
@@ -341,8 +304,9 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
 
         private Drawable CreateParameterInputs()
         {
-            return new BasicScrollContainer(scrollDirection: Direction.Vertical)
+            var parameterInput = new BasicScrollContainer(scrollDirection: Direction.Vertical)
             {
+                Padding = new MarginPadding { Top = 25, Bottom = 25 },
                 Name = "ParameterInputScrollable",
                 RelativeSizeAxes = Axes.Both,
                 Child = new FillFlowContainer
@@ -350,10 +314,33 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                     Direction = FillDirection.Vertical,
                     AutoSizeAxes = Axes.Y,
                     RelativeSizeAxes = Axes.X,
-                    Padding = new MarginPadding(25),
+                    Padding = new MarginPadding { Right = 25 },
                     Children = new Drawable[]
                     {
-                        new BasicButton {
+                        this.parameters.CreateControlSection(label: "General"),
+                        this.parameters.ColourParameters.CreateControlSection(label: "Colour"),
+                        this.parameters.RhythmParameters.CreateControlSection(label: "Rhythm")
+                    }
+                }
+            };
+
+            var gridContainer = new GridContainer
+            {
+                RelativeSizeAxes = Axes.Both,
+                ColumnDimensions = new[]
+                {
+                    new Dimension(GridSizeMode.Distributed),
+                },
+                RowDimensions = new[] {
+                    new Dimension(GridSizeMode.AutoSize),
+                    new Dimension(GridSizeMode.Distributed)
+                },
+                Content = new[]
+                {
+                    new Drawable[]
+                    {
+                        new BasicButton
+                        {
                             Text = "Compute Difficulty",
                             Size = new Vector2(200, 30),
                             Anchor = Anchor.TopLeft,
@@ -363,8 +350,20 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                                 Task.Run(RecomputeDifficulty);
                             }
                         },
-                        this.parameters.ColourParameters.CreateControlSection(label: "Colour"),
+                    },
+                    new Drawable[] {
+                        parameterInput
                     }
+                }
+            };
+
+            return new Container
+            {
+                RelativeSizeAxes = Axes.Both,
+                Padding = new MarginPadding(25),
+                Children = new Drawable[]
+                {
+                    gridContainer
                 }
             };
         }
