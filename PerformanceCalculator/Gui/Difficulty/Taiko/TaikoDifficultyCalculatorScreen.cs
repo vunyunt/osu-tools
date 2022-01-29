@@ -42,7 +42,9 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
         private BindableList<TaikoBeatmapViewObject> beatmaps = new BindableList<TaikoBeatmapViewObject>();
         private FillFlowContainer beatmapsContainer;
         private Button loadFromTresButton;
+        private Button loadBeatmapIDButton;
         private TresApi tresApi;
+        private Bindable<bool> canLoadNewBeatmap = new Bindable<bool>(true);
 
         public TaikoDifficultyCalculatorScreen()
         {
@@ -80,18 +82,22 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
 
         private void LoadBeatmapId(string beatmapId)
         {
+            this.Schedule(() => this.canLoadNewBeatmap.Value = false);
+
             ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(beatmapId);
             this.Schedule(() =>
             {
                 beatmaps.Add(new TaikoBeatmapViewObject(beatmap));
             });
+
+            this.Schedule(() => this.canLoadNewBeatmap.Value = true);
         }
 
         private async void LoadBeatmapsFromTres()
         {
             this.Schedule(() =>
             {
-                loadFromTresButton.Enabled.Value = false;
+                this.canLoadNewBeatmap.Value = false;
             });
 
             try
@@ -107,14 +113,14 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 }
                 this.Schedule(() =>
                 {
-                    loadFromTresButton.Enabled.Value = true;
+                    this.canLoadNewBeatmap.Value = true;
                 });
             }
             catch (System.Exception e)
             {
                 this.Schedule(() =>
                 {
-                    loadFromTresButton.Enabled.Value = true;
+                    this.canLoadNewBeatmap.Value = true;
                 });
 
                 // TODO: Show error message
@@ -210,11 +216,23 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 Anchor = Anchor.TopLeft,
                 Origin = Anchor.TopLeft,
             };
-
+            this.loadFromTresButton.Enabled.BindTo(this.canLoadNewBeatmap);
             this.loadFromTresButton.Action += () =>
             {
                 Task.Run(LoadBeatmapsFromTres);
             };
+
+            this.loadBeatmapIDButton = new BasicButton
+            {
+                Text = "Load",
+                Size = new Vector2(100, 30),
+                Action = () =>
+                {
+                    Task.Run(() => LoadBeatmapId(this.beatmapIdInputValue.Value));
+                }
+            };
+            this.loadBeatmapIDButton.Enabled.BindTo(this.canLoadNewBeatmap);
+
 
             return new BasicScrollContainer(scrollDirection: Direction.Horizontal)
             {
@@ -236,14 +254,7 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                                 Height = 30,
                                 Current = this.beatmapIdInputValue
                             },
-                            new BasicButton {
-                                Text = "Load",
-                                Size = new Vector2(100, 30),
-                                Action = () =>
-                                {
-                                    LoadBeatmapId(this.beatmapIdInputValue.Value);
-                                }
-                            },
+                            this.loadBeatmapIDButton,
                             this.loadFromTresButton
                         }
                     }
@@ -319,7 +330,8 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                     {
                         this.parameters.CreateControlSection(label: "General"),
                         this.parameters.ColourParameters.CreateControlSection(label: "Colour"),
-                        this.parameters.RhythmParameters.CreateControlSection(label: "Rhythm")
+                        this.parameters.RhythmParameters.CreateControlSection(label: "Rhythm"),
+                        this.parameters.StaminaParameters.CreateControlSection(label: "Stamina"),
                     }
                 }
             };
