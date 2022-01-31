@@ -7,6 +7,7 @@ namespace PerformanceCalculator.Gui.Api.Tres
 {
     public struct TresBeatmap {
         public string beatmap_id;
+        public double new_rating;
     }
 
     public class TresApi
@@ -29,10 +30,20 @@ namespace PerformanceCalculator.Gui.Api.Tres
         {
             HttpRequestMessage message = new HttpRequestMessage(
                 HttpMethod.Get,
-                $"/beatmaps?filter={{\"limit\":{limit}, \"fields\":{{\"beatmap_id\":true}}}}");
+                $"/beatmaps?filter={{\"limit\":{limit}}}");
             HttpResponseMessage response = client.Send(message);
             string responseString = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<TresBeatmap[]>(responseString).Select(b => b.beatmap_id).ToArray();
+        }
+
+        public async Task<TresBeatmap[]> getBeatmaps(uint limit = 10)
+        {
+            HttpRequestMessage message = new HttpRequestMessage(
+                HttpMethod.Get,
+                $"/beatmaps?filter={{\"limit\":{limit}}}");
+            HttpResponseMessage response = client.Send(message);
+            string responseString = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<TresBeatmap[]>(responseString);
         }
     }
 }

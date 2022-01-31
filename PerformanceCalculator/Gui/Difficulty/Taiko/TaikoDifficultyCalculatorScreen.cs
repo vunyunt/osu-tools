@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
 using osu.Framework.Allocation;
@@ -14,33 +15,16 @@ using osuTK;
 using osu.Game.Rulesets.Taiko;
 using osu.Game.Rulesets.Taiko.Difficulty;
 
+using PerformanceCalculator.Gui.Difficulty.Taiko.Components;
 using PerformanceCalculator.Gui.Api.Tres;
 
 namespace PerformanceCalculator.Gui.Difficulty.Taiko
 {
-    public class TaikoBeatmapViewObject
-    {
-        public ProcessorWorkingBeatmap Beatmap;
-        public TaikoDifficultyViewObject OnlineDifficulty;
-        public TaikoDifficultyViewObject TresDifficulty;
-        public TaikoDifficultyViewObject CalculatedDifficulty;
-
-        public TaikoBeatmapViewObject(ProcessorWorkingBeatmap beatmap)
-        {
-            this.Beatmap = beatmap;
-            this.OnlineDifficulty = new TaikoDifficultyViewObject
-            {
-                BeatmapId = beatmap.BeatmapInfo.ID.ToString()
-            };
-        }
-    };
-
     public class TaikoDifficultyCalculatorScreen : Screen
     {
         private TaikoDiffficultyCalculationParameters parameters;
         private Bindable<string> beatmapIdInputValue = new Bindable<string>(string.Empty);
         private BindableList<TaikoBeatmapViewObject> beatmaps = new BindableList<TaikoBeatmapViewObject>();
-        private FillFlowContainer beatmapsContainer;
         private Button loadFromTresButton;
         private Button loadBeatmapIDButton;
         private TresApi tresApi;
@@ -65,18 +49,19 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 this.beatmaps[i].Beatmap,
                 this.parameters);
                 TaikoDifficultyAttributes result = calculator.Calculate() as TaikoDifficultyAttributes;
-                beatmaps[i].CalculatedDifficulty = new TaikoDifficultyViewObject
-                {
-                    StarRating = result.StarRating,
-                    ColourDifficulty = result.ColourDifficulty,
-                    StaminaDifficulty = result.StaminaDifficulty,
-                    RhythmDifficulty = result.RhythmDifficulty
-                };
-            }
 
+                this.updateBeatmapDifficultyOnUIThread(i, result);
+            }
+        }
+
+        private void updateBeatmapDifficultyOnUIThread(int i, TaikoDifficultyAttributes result)
+        {
             this.Schedule(() =>
             {
-                this.OnBeatmapsChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                beatmaps[i].CalculatedDifficulty.StarRating.Value = result.StarRating;
+                beatmaps[i].CalculatedDifficulty.ColourDifficulty.Value = result.ColourDifficulty;
+                beatmaps[i].CalculatedDifficulty.StaminaDifficulty.Value = result.StaminaDifficulty;
+                beatmaps[i].CalculatedDifficulty.RhythmDifficulty.Value = result.RhythmDifficulty;
             });
         }
 
@@ -109,13 +94,21 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
 
             try
             {
-                string[] beatmapIds = await this.tresApi.getBeatmapIds(limit: 10);
-                foreach (string beatmapId in beatmapIds)
+                TresBeatmap[] tresBeatmaps = await this.tresApi.getBeatmaps(limit: 10);
+                foreach (TresBeatmap tresBeatmap in tresBeatmaps)
                 {
-                    ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(beatmapId);
+                    ProcessorWorkingBeatmap beatmap = ProcessorWorkingBeatmap.FromFileOrId(tresBeatmap.beatmap_id);
                     this.Schedule(() =>
                     {
-                        beatmaps.Add(new TaikoBeatmapViewObject(beatmap));
+                        TaikoBeatmapViewObject beatmapViewObject = new TaikoBeatmapViewObject(beatmap);
+                        TaikoDifficultyViewObject tresDifficulty = new TaikoDifficultyViewObject
+                        {
+                            BeatmapId = tresBeatmap.beatmap_id,
+                        };
+                        tresDifficulty.StarRating.Value = tresBeatmap.new_rating;
+                        beatmapViewObject.ComparisonDifficulty = tresDifficulty;
+
+                        beatmaps.Add(beatmapViewObject);
                     });
                 }
                 this.Schedule(() =>
@@ -131,86 +124,6 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
                 });
 
                 // TODO: Show error message
-            }
-        }
-
-        private Drawable RenderBeatmap(TaikoBeatmapViewObject beatmap)
-        {
-            return new FillFlowContainer
-            {
-                Direction = FillDirection.Vertical,
-                AutoSizeAxes = Axes.Both,
-                Children = new Drawable[]
-                {
-                    new SpriteText
-                    {
-                        Text = beatmap.Beatmap.Metadata.Artist + " - " + beatmap.Beatmap.Metadata.Title,
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Colour = Color4.White
-                    },
-                    new SpriteText
-                    {
-                        Text = "[" + beatmap.Beatmap.BeatmapInfo.DifficultyName + "]",
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Colour = Color4.White
-                    },
-                    new SpriteText
-                    {
-                        Text = "Calculated Star Rating: " + beatmap.CalculatedDifficulty.StarRating.ToString(),
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Colour = Color4.White
-                    },
-                    new SpriteText
-                    {
-                        Text = "Calculated Colour Difficulty: " + beatmap.CalculatedDifficulty.ColourDifficulty.ToString(),
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Colour = Color4.White
-                    },
-                    new SpriteText
-                    {
-                        Text = "Calculated Stamina Difficulty: " + beatmap.CalculatedDifficulty.StaminaDifficulty.ToString(),
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Colour = Color4.White
-                    },
-                    new SpriteText
-                    {
-                        Text = "Calculated Rhythm Difficulty: " + beatmap.CalculatedDifficulty.RhythmDifficulty.ToString(),
-                        Anchor = Anchor.TopLeft,
-                        Origin = Anchor.TopLeft,
-                        Colour = Color4.White
-                    }
-                }
-            };
-        }
-
-        /// <Summary>
-        ///    Event handler for when the beatmap list changes.
-        /// </Summary>
-        private void OnBeatmapsChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (beatmapsContainer == null)
-                return;
-
-            switch (e.Action)
-            {
-                case NotifyCollectionChangedAction.Add:
-                    foreach (TaikoBeatmapViewObject beatmap in e.NewItems)
-                        beatmapsContainer.Add(RenderBeatmap(beatmap));
-                    break;
-                case NotifyCollectionChangedAction.Remove:
-                    foreach (TaikoBeatmapViewObject beatmap in e.OldItems)
-                        beatmapsContainer.Remove(beatmapsContainer[e.OldStartingIndex]);
-                    break;
-                case NotifyCollectionChangedAction.Reset:
-                    beatmapsContainer.Clear();
-                    foreach (TaikoBeatmapViewObject beatmap in beatmaps)
-                        beatmapsContainer.Add(RenderBeatmap(beatmap));
-                    break;
             }
         }
 
@@ -274,44 +187,33 @@ namespace PerformanceCalculator.Gui.Difficulty.Taiko
         /// </Summary>
         private Drawable CreateBeatmapsContainer()
         {
-            this.beatmapsContainer = new FillFlowContainer
-            {
-                AutoSizeAxes = Axes.Both,
-                Direction = FillDirection.Vertical,
-                Spacing = new Vector2(0, 50),
-                Children = this.beatmaps.Select(b => RenderBeatmap(b)).ToArray(),
-            };
-
-            this.beatmaps.CollectionChanged += this.OnBeatmapsChanged;
-
-            return new GridContainer
+            return new Container
             {
                 RelativeSizeAxes = Axes.Both,
-                Margin = new MarginPadding(25),
-                ColumnDimensions = new[]
+                Padding = new MarginPadding(25),
+                Child = new GridContainer
                 {
-                    new Dimension(GridSizeMode.Distributed),
-                },
-                RowDimensions = new[] {
-                    new Dimension(GridSizeMode.AutoSize),
-                    new Dimension(GridSizeMode.Distributed)
-                },
-                Content = new[]
-                {
-                    new Drawable[]
+                    RelativeSizeAxes = Axes.Both,
+                    ColumnDimensions = new[]
                     {
-                        this.CreateBeatmapIdInput(),
+                        new Dimension(GridSizeMode.Distributed),
                     },
-                    new Drawable[] {
-                        new Container {
-                            RelativeSizeAxes = Axes.Both,
-                            Padding = new MarginPadding {Top = 25, Bottom = 25},
-                            Child = new BasicScrollContainer(scrollDirection: Direction.Vertical)
-                            {
+                    RowDimensions = new[] {
+                        new Dimension(GridSizeMode.AutoSize),
+                        new Dimension(GridSizeMode.Distributed)
+                    },
+                    Content = new[]
+                    {
+                        new Drawable[]
+                        {
+                            this.CreateBeatmapIdInput(),
+                        },
+                        new Drawable[] {
+                            new Container {
                                 RelativeSizeAxes = Axes.Both,
-                                Children = new[]
-                                {
-                                    this.beatmapsContainer
+                                Padding = new MarginPadding {Top = 25, Bottom = 25},
+                                Child = new TaikoBeatmapListDisplay {
+                                    Beatmaps = this.beatmaps
                                 }
                             }
                         }
